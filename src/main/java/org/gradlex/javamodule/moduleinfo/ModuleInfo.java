@@ -26,11 +26,15 @@ import java.util.Set;
 public class ModuleInfo extends ModuleSpec {
 
     private final String moduleVersion;
-
-    final Set<String> exports = new LinkedHashSet<>();
+    final Set<Tuple2<String, String[]>> exports = new LinkedHashSet<>();
     final Set<String> requires = new LinkedHashSet<>();
     final Set<String> requiresTransitive = new LinkedHashSet<>();
     final Set<String> requiresStatic = new LinkedHashSet<>();
+
+    final Set<Tuple2<String, String[]>> opens = new LinkedHashSet<>();
+
+    final Set<String> uses = new LinkedHashSet<>();
+    final Set<Tuple2<String, String[]>> provides = new LinkedHashSet<>();
     final Set<String> ignoreServiceProviders = new LinkedHashSet<>();
 
     ModuleInfo(String identifier, String moduleName, String moduleVersion) {
@@ -41,36 +45,48 @@ public class ModuleInfo extends ModuleSpec {
     /**
      * @param exports corresponds to the directive in a 'module-info.java' file
      */
-    public void exports(String exports) {
-        addOrThrow(this.exports, exports);
+    public void exports(String exports, String... to) {
+        tryAdd(this.exports, Tuple2.of(exports, to));
     }
 
     /**
      * @param requires corresponds to the directive in a 'module-info.java' file
      */
     public void requires(String requires) {
-        addOrThrow(this.requires, requires);
+        tryAdd(this.requires, requires);
     }
 
     /**
      * @param requiresTransitive corresponds to the directive in a 'module-info.java' file
      */
     public void requiresTransitive(String requiresTransitive) {
-        addOrThrow(this.requiresTransitive, requiresTransitive);
+        tryAdd(this.requiresTransitive, requiresTransitive);
     }
 
     /**
      * @param requiresStatic corresponds to the directive in a 'module-info.java' file
      */
     public void requiresStatic(String requiresStatic) {
-        addOrThrow(this.requiresStatic, requiresStatic);
+        tryAdd(this.requiresStatic, requiresStatic);
+    }
+
+    public void opens(String opens, String... to) {
+        tryAdd(this.opens, Tuple2.of(opens, to));
+    }
+
+    public void uses(String uses) {
+        tryAdd(this.uses, uses);
+    }
+
+    public void provides(String provides, String... with) {
+        tryAdd(this.provides, Tuple2.of(provides, with));
     }
 
     /**
      * @param ignoreServiceProvider do not transfer service provider to the 'module-info.class'
      */
     public void ignoreServiceProvider(String ignoreServiceProvider) {
-        addOrThrow(this.ignoreServiceProviders, ignoreServiceProvider);
+        tryAdd(this.ignoreServiceProviders, ignoreServiceProvider);
     }
 
     /**
@@ -80,9 +96,9 @@ public class ModuleInfo extends ModuleSpec {
         return moduleVersion;
     }
 
-    private static void addOrThrow(Set<String> target, String element) {
+    private static <T> void tryAdd(Set<T> target, T element) {
         if (!target.add(element)) {
-            throw new IllegalArgumentException("The element '" + element + "' is already specified");
+            System.err.println("The element '" + element + "' is already specified");
         }
     }
 

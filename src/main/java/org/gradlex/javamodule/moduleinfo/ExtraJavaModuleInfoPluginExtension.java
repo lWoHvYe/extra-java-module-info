@@ -30,8 +30,9 @@ import javax.annotation.Nullable;
 @SuppressWarnings("unused")
 public abstract class ExtraJavaModuleInfoPluginExtension {
 
-    abstract public MapProperty<String, ModuleSpec> getModuleSpecs();
-    abstract public Property<Boolean> getFailOnMissingModuleInfo();
+    public abstract MapProperty<String, ModuleSpec> getModuleSpecs();
+
+    public abstract Property<Boolean> getFailOnMissingModuleInfo();
 
     /**
      * Add full module information for a given Jar file.

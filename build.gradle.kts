@@ -4,15 +4,15 @@ plugins {
 }
 
 group = "org.gradlex"
-version = "1.1"
+version = "1.1.1"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 dependencies {
-    implementation("org.ow2.asm:asm:8.0.1")
+    implementation("org.ow2.asm:asm:9.4")
 
     testImplementation("org.spockframework:spock-core:2.1-groovy-3.0")
 }

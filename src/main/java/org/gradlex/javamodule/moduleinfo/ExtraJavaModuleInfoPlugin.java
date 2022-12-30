@@ -38,10 +38,9 @@ import org.gradle.util.GradleVersion;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
- * Entry point of the plugin.
+ * Entry point of our plugin that should be applied in the root project.
  */
 @SuppressWarnings("unused")
 @NonNullApi
@@ -54,7 +53,7 @@ public abstract class ExtraJavaModuleInfoPlugin implements Plugin<Project> {
         }
 
         // register the plugin extension as 'extraJavaModuleInfo {}' configuration block
-        ExtraJavaModuleInfoPluginExtension extension = project.getExtensions().create("extraJavaModuleInfo", ExtraJavaModuleInfoPluginExtension.class);
+        var extension = project.getExtensions().create("extraJavaModuleInfo", ExtraJavaModuleInfoPluginExtension.class);
         extension.getFailOnMissingModuleInfo().convention(true);
 
         // setup the transform for all projects in the build
@@ -127,26 +126,22 @@ public abstract class ExtraJavaModuleInfoPlugin implements Plugin<Project> {
         public List<String> transform(Collection<ResolvedArtifactResult> artifacts) {
             return artifacts.stream().map(a -> {
                 ComponentIdentifier componentIdentifier = a.getId().getComponentIdentifier();
-                if (componentIdentifier instanceof ModuleComponentIdentifier) {
-                    return ((ModuleComponentIdentifier) componentIdentifier).getModuleIdentifier().toString();
+                if (componentIdentifier instanceof ModuleComponentIdentifier moduleComponentIdentifier) {
+                    return moduleComponentIdentifier.getModuleIdentifier().toString();
                 } else {
                     return componentIdentifier.getDisplayName();
                 }
-            }).collect(Collectors.toList());
+            }).toList();
         }
     }
 
-    private static class FileExtractor implements Transformer<List<RegularFile>, Collection<ResolvedArtifactResult>> {
-        private final ProjectLayout projectLayout;
-
-        public FileExtractor(ProjectLayout projectLayout) {
-            this.projectLayout = projectLayout;
-        }
+    private record FileExtractor(ProjectLayout projectLayout)
+            implements Transformer<List<RegularFile>, Collection<ResolvedArtifactResult>> {
 
         @Override
         public List<RegularFile> transform(Collection<ResolvedArtifactResult> artifacts) {
             Directory projectDirectory = projectLayout.getProjectDirectory();
-            return artifacts.stream().map(a -> projectDirectory.file(a.getFile().getAbsolutePath())).collect(Collectors.toList());
+            return artifacts.stream().map(a -> projectDirectory.file(a.getFile().getAbsolutePath())).toList();
         }
     }
 }
