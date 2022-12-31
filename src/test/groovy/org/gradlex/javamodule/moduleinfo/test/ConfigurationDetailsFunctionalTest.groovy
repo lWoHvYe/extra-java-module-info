@@ -180,9 +180,12 @@ class ConfigurationDetailsFunctionalTest extends Specification {
             
             extraJavaModuleInfo {
                 module("${libs.commonsCli}", "org.apache.commons.cli", "8.1") {
+                    requires("java.base")
                     exports("org.apache.commons.cli")
                 }
-                module("${libs.commonsCollections}", "org.apache.commons.collections", "9.2")
+                module("${libs.commonsCollections}", "org.apache.commons.collections", "9.2") {
+                    requires("java.base")
+                }
             }
         """
 
@@ -228,9 +231,12 @@ class ConfigurationDetailsFunctionalTest extends Specification {
             
             extraJavaModuleInfo {
                 module("${libs.commonsCli}", "org.apache.commons.cli") {
+                    requires("java.base")
                     exports("org.apache.commons.cli")
                 }
-                module("${libs.commonsCollections}", "org.apache.commons.collections")
+                module("${libs.commonsCollections}", "org.apache.commons.collections") {
+                    requires("java.base")
+                }
 
                 automaticModule("${libs.jsr305}", "jsr305")
             }
