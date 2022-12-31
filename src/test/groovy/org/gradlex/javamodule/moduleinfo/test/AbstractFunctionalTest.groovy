@@ -110,8 +110,7 @@ abstract class AbstractFunctionalTest extends Specification {
             module org.gradle.sample.app {
                 exports org.gradle.sample.app;
                 opens org.gradle.sample.app.data; // allow Gson to access via reflection
-                
-                requires java.base;
+            
                 requires com.google.gson;
                 requires org.apache.commons.lang3;
                 requires org.apache.commons.cli;
@@ -167,8 +166,7 @@ abstract class AbstractFunctionalTest extends Specification {
             }
         """
         file("src/main/java/module-info.java") << """
-            module org.gradle.sample.app {
-                requires java.base;               
+            module org.gradle.sample.app {               
                 requires javax.inject;               
             }
         """
@@ -206,8 +204,7 @@ abstract class AbstractFunctionalTest extends Specification {
             }
         """
         file("src/main/java/module-info.java") << """
-            module org.gradle.sample.app {
-                requires java.base;               
+            module org.gradle.sample.app {               
                 requires javax.inject;               
             }
         """
@@ -247,8 +244,7 @@ abstract class AbstractFunctionalTest extends Specification {
             }
         """
         file("src/main/java/module-info.java") << """
-            module org.gradle.sample.app {
-                requires java.base;               
+            module org.gradle.sample.app {               
                 requires org.apache.logging.log4j;
                 requires org.apache.logging.log4j.core;
                 
@@ -303,8 +299,7 @@ abstract class AbstractFunctionalTest extends Specification {
             }
         """
         file("src/main/java/module-info.java") << """
-            module org.gradle.sample.app {
-                requires java.base;               
+            module org.gradle.sample.app {               
                 requires groovy.all;
                 uses javax.script.ScriptEngineFactory;                                                           
             }
@@ -366,8 +361,7 @@ abstract class AbstractFunctionalTest extends Specification {
             }
         """
         file("src/main/java/module-info.java") << """
-            module org.gradle.sample.app {
-                requires java.base;               
+            module org.gradle.sample.app {               
                 requires spring.boot.autoconfigure;
             }
         """
@@ -412,7 +406,6 @@ abstract class AbstractFunctionalTest extends Specification {
         """
         file("src/main/java/module-info.java") << """
             module org.gradle.sample.app {
-                requires java.base;               
                 requires org.apache.zookeeper;
                 requires org.slf4j;
             }
@@ -473,7 +466,6 @@ abstract class AbstractFunctionalTest extends Specification {
         """
         file("src/main/java/module-info.java") << """
             module org.gradle.sample.app {
-                requires java.base;               
                 requires org.apache.qpid.broker;
             }
         """
