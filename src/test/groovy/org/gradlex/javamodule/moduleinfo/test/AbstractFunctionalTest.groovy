@@ -258,6 +258,7 @@ abstract class AbstractFunctionalTest extends Specification {
             
             extraJavaModuleInfo {               
                 module("${libs.log4jCore}", "org.apache.logging.log4j.core", "2.14.0") {
+                    requires("java.base")
                     requires("java.compiler")
                     requires("java.desktop")
                     requires("org.apache.logging.log4j")
@@ -312,6 +313,7 @@ abstract class AbstractFunctionalTest extends Specification {
             extraJavaModuleInfo {               
                 module("${libs.groovyAll}", "groovy.all", "2.4.15") {
                    requiresTransitive("java.scripting")
+                   requires("java.base")
                    requires("java.logging")
                    requires("java.desktop")
                    ignoreServiceProvider("org.codehaus.groovy.runtime.ExtensionModule")
@@ -372,6 +374,7 @@ abstract class AbstractFunctionalTest extends Specification {
             
             extraJavaModuleInfo {               
                 module("${libs.springBootAutoconfigure}", "spring.boot.autoconfigure") {
+                    requires("java.base")
                     requires("spring.context")
                     requiresTransitive("spring.boot")
                     requiresStatic("com.google.gson")
