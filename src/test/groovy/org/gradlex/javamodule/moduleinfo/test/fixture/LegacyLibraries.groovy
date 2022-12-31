@@ -13,7 +13,7 @@ class LegacyLibraries {
     def commonsCli = jarNameOnly ? "commons-cli-1.4.jar" : "commons-cli:commons-cli"
     def commonsCollections = jarNameOnly ? "commons-collections-3.2.2.jar" : "commons-collections:commons-collections"
     def commonsLogging = jarNameOnly ? "commons-logging-1.2.jar" : "commons-logging:commons-logging"
-    def groovyAll = jarNameOnly ? "groovy-all-2.4.15.jar" : "org.codehaus.groovy:groovy-all"
+    def groovyAll = jarNameOnly ? "groovy-all-3.0.14.jar" : "org.codehaus.groovy:groovy-all"
     def javaxInject = jarNameOnly ? "javax.inject-1.jar" : "javax.inject:javax.inject"
     def jsr305 = jarNameOnly ? "jsr305-3.0.2.jar" : "com.google.code.findbugs:jsr305"
     def log4jCore = jarNameOnly ? "log4j-core-2.14.0.jar" : "org.apache.logging.log4j:log4j-core"
