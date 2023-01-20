@@ -4,6 +4,8 @@ import org.gradlex.javamodule.moduleinfo.test.fixture.GradleBuild
 import org.gradlex.javamodule.moduleinfo.test.fixture.LegacyLibraries
 import spock.lang.Specification
 
+import static org.gradlex.javamodule.moduleinfo.test.fixture.GradleBuild.gradleVersionUnderTest
+
 class EdgeCasesFunctionalTest extends Specification {
 
     @Delegate
@@ -25,7 +27,7 @@ class EdgeCasesFunctionalTest extends Specification {
         '''
     }
 
-    def "doe not fail if an unused Jar on the merge path cannot be resolved"() {
+    def "does not fail if an unused Jar on the merge path cannot be resolved"() {
         given:
         file("src/main/java/org/gradle/sample/app/Main.java") << """
             package org.gradle.sample.app;

@@ -37,6 +37,9 @@ public class ModuleInfo extends ModuleSpec {
     final Set<Tuple2<String, String[]>> provides = new LinkedHashSet<>();
     final Set<String> ignoreServiceProviders = new LinkedHashSet<>();
 
+    boolean exportAllPackages;
+    boolean requireAllDefinedDependencies;
+
     ModuleInfo(String identifier, String moduleName, String moduleVersion) {
         super(identifier, moduleName);
         this.moduleVersion = moduleVersion;
@@ -102,4 +105,17 @@ public class ModuleInfo extends ModuleSpec {
         }
     }
 
+    /**
+     * Automatically export all packages of the Jar. Can be used instead of individual 'exports()' statements.
+     */
+    public void exportAllPackages() {
+        this.exportAllPackages = true;
+    }
+
+    /**
+     * Automatically add 'requires' statements for all dependencies defined in the metadata of the component.
+     */
+    public void requireAllDefinedDependencies() {
+        this.requireAllDefinedDependencies = true;
+    }
 }
