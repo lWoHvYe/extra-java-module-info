@@ -81,6 +81,7 @@ public abstract class ExtraJavaModuleInfoTransform implements TransformAction<Ex
 
         @InputFiles
         ListProperty<RegularFile> getMergeJars();
+
         @Input
         MapProperty<String, Set<String>> getCompileClasspathDependencies();
 
@@ -200,7 +201,7 @@ public abstract class ExtraJavaModuleInfoTransform implements TransformAction<Ex
             try (var outputStream = new JarOutputStream(Files.newOutputStream(moduleJar.toPath()), manifest)) {
                 Map<String, List<String>> providers = new LinkedHashMap<>();
                 Set<String> packages = new TreeSet<>();
-                copyAndExtractProviders(inputStream, outputStream, !automaticModule.getMergedJars().isEmpty(), providers, packages,null);
+                copyAndExtractProviders(inputStream, outputStream, !automaticModule.getMergedJars().isEmpty(), providers, packages, null);
                 mergeJars(automaticModule, outputStream, providers, packages);
             }
         } catch (IOException e) {
@@ -211,14 +212,14 @@ public abstract class ExtraJavaModuleInfoTransform implements TransformAction<Ex
     private void addModuleDescriptor(File originalJar, File moduleJar, ModuleInfo moduleInfo) {
         try (var inputStream = new JarInputStream(Files.newInputStream(originalJar.toPath()));
              var outputStream = newJarOutputStream(Files.newOutputStream(moduleJar.toPath()), inputStream.getManifest())) {
-                Map<String, List<String>> providers = new LinkedHashMap<>();
-                Set<String> packages = new TreeSet<>();
-                copyAndExtractProviders(inputStream, outputStream, !moduleInfo.getMergedJars().isEmpty(), providers, packages,moduleInfo);
-                mergeJars(moduleInfo, outputStream, providers, packages);
-                outputStream.putNextEntry(new JarEntry("module-info.class"));
-                outputStream.write(addModuleInfo(moduleInfo, providers, versionFromFilePath(originalJar.toPath()),
-                        moduleInfo.exportAllPackages ? packages : Collections.emptySet()));
-                outputStream.closeEntry();
+            Map<String, List<String>> providers = new LinkedHashMap<>();
+            Set<String> packages = new TreeSet<>();
+            copyAndExtractProviders(inputStream, outputStream, !moduleInfo.getMergedJars().isEmpty(), providers, packages, moduleInfo);
+            mergeJars(moduleInfo, outputStream, providers, packages);
+            outputStream.putNextEntry(new JarEntry("module-info.class"));
+            outputStream.write(addModuleInfo(moduleInfo, providers, versionFromFilePath(originalJar.toPath()),
+                    moduleInfo.exportAllPackages ? packages : Collections.emptySet()));
+            outputStream.closeEntry();
         } catch (IOException e) {
             System.err.println(e);
         }
@@ -275,8 +276,8 @@ public abstract class ExtraJavaModuleInfoTransform implements TransformAction<Ex
     }
 
 
-    private static void manageEntries(JarInputStream inputStream, JarOutputStream outputStream, JarEntry jarEntry,
-                                      @Nullable ModuleInfo moduleInfo) throws IOException {
+    private void manageEntries(JarInputStream inputStream, JarOutputStream outputStream, JarEntry jarEntry,
+                               @Nullable ModuleInfo moduleInfo) throws IOException {
         outputStream.putNextEntry(jarEntry);
         if (Objects.nonNull(moduleInfo) && jarEntry.getName().equals("module-info.class")) {
             System.err.println("got it !!!");
@@ -287,7 +288,7 @@ public abstract class ExtraJavaModuleInfoTransform implements TransformAction<Ex
                 @Override
                 public ModuleVisitor visitModule(String name, int access, String version) {
                     var moduleVisitor = super.visitModule(name, access, version);
-                    modifyModuleInfo(moduleVisitor, moduleInfo, Collections.emptyMap());
+                    modifyModuleInfo(moduleVisitor, moduleInfo, Collections.emptyMap(), Collections.emptySet());
                     return moduleVisitor;
                 }
             };
@@ -298,20 +299,20 @@ public abstract class ExtraJavaModuleInfoTransform implements TransformAction<Ex
         outputStream.closeEntry();
     }
 
-    private static byte[] addModuleInfo(ModuleInfo moduleInfo, Map<String, List<String>> providers, @Nullable String version,@Nullable String version, Set<String> autoExportedPackages) {
+    private byte[] addModuleInfo(ModuleInfo moduleInfo, Map<String, List<String>> providers, @Nullable String version, Set<String> autoExportedPackages) {
         var classWriter = new ClassWriter(0);
         classWriter.visit(Opcodes.V11, Opcodes.ACC_MODULE, "module-info", null, null, null);
         var moduleVersion = moduleInfo.getModuleVersion() == null ? version : moduleInfo.getModuleVersion();
         var moduleVisitor = classWriter.visitModule(moduleInfo.getModuleName(),
                 // access 0x0000 is blank/default; will use open module for that unset exports
                 moduleInfo.exports.isEmpty() ? Opcodes.ACC_OPEN : 0x0000, moduleVersion);
-        modifyModuleInfo(moduleVisitor, moduleInfo, providers);
+        modifyModuleInfo(moduleVisitor, moduleInfo, providers, autoExportedPackages);
         moduleVisitor.visitEnd();
         classWriter.visitEnd();
         return classWriter.toByteArray();
     }
 
-    private static void modifyModuleInfo(ModuleVisitor moduleVisitor, ModuleInfo moduleInfo, Map<String, List<String>> providers) {
+    private void modifyModuleInfo(ModuleVisitor moduleVisitor, ModuleInfo moduleInfo, Map<String, List<String>> providers, Set<String> autoExportedPackages) {
         for (String packageName : autoExportedPackages) {
             moduleVisitor.visitExport(packageName, 0);
         }
@@ -324,7 +325,7 @@ public abstract class ExtraJavaModuleInfoTransform implements TransformAction<Ex
             Set<String> compileDependencies = getParameters().getCompileClasspathDependencies().get().get(moduleInfo.getIdentifier());
             Set<String> runtimeDependencies = getParameters().getRuntimeClasspathDependencies().get().get(moduleInfo.getIdentifier());
 
-            if (compileDependencies == null || runtimeDependencies  == null) {
+            if (compileDependencies == null || runtimeDependencies == null) {
                 throw new RuntimeException("[requires directives from metadata] " +
                         "Cannot find dependencies for '" + moduleInfo.getModuleName() + "'. " +
                         "Are '" + moduleInfo.getIdentifier() + "' the correct component coordinates?");
@@ -332,8 +333,8 @@ public abstract class ExtraJavaModuleInfoTransform implements TransformAction<Ex
 
             Set<String> allDependencies = new TreeSet<>();
             allDependencies.addAll(compileDependencies);
-            allDependencies.addAll(runtimeDependencies );
-            for (String ga: allDependencies) {
+            allDependencies.addAll(runtimeDependencies);
+            for (String ga : allDependencies) {
                 String moduleName = gaToModuleName(ga);
                 if (compileDependencies.contains(ga) && runtimeDependencies.contains(ga)) {
                     moduleVisitor.visitRequire(moduleName, Opcodes.ACC_TRANSITIVE, null);
@@ -403,7 +404,7 @@ public abstract class ExtraJavaModuleInfoTransform implements TransformAction<Ex
 
             if (mergeJarFile != null) {
                 try (JarInputStream toMergeInputStream = new JarInputStream(Files.newInputStream(mergeJarFile.getAsFile().toPath()))) {
-                    copyAndExtractProviders(toMergeInputStream, outputStream, true, providers, packages);
+                    copyAndExtractProviders(toMergeInputStream, outputStream, true, providers, packages, null);
                 }
             } else {
                 throw new RuntimeException("Jar not found: " + identifier);
@@ -422,18 +423,6 @@ public abstract class ExtraJavaModuleInfoTransform implements TransformAction<Ex
                 outputStream.write("\n".getBytes());
             }
             outputStream.closeEntry();
-        }
-    }
-
-    private byte[] readAllBytes(InputStream inputStream) throws IOException {
-        final int bufLen = 4 * 0x400;
-        byte[] buf = new byte[bufLen];
-        int readLen;
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            while ((readLen = inputStream.read(buf, 0, bufLen)) != -1) {
-                outputStream.write(buf, 0, readLen);
-            }
-            return outputStream.toByteArray();
         }
     }
 
