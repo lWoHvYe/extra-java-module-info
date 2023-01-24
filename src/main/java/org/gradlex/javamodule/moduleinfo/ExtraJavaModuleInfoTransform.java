@@ -305,7 +305,7 @@ public abstract class ExtraJavaModuleInfoTransform implements TransformAction<Ex
         var moduleVersion = moduleInfo.getModuleVersion() == null ? version : moduleInfo.getModuleVersion();
         var moduleVisitor = classWriter.visitModule(moduleInfo.getModuleName(),
                 // access 0x0000 is blank/default; will use open module for that unset exports
-                moduleInfo.exports.isEmpty() ? Opcodes.ACC_OPEN : 0x0000, moduleVersion);
+                moduleInfo.exports.isEmpty() && autoExportedPackages.isEmpty() ? Opcodes.ACC_OPEN : 0x0000, moduleVersion);
         modifyModuleInfo(moduleVisitor, moduleInfo, providers, autoExportedPackages);
         moduleVisitor.visitEnd();
         classWriter.visitEnd();
