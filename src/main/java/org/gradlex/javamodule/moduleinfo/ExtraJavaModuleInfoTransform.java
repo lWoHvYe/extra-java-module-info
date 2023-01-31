@@ -35,10 +35,8 @@ import org.objectweb.asm.*;
 import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -233,6 +231,7 @@ public abstract class ExtraJavaModuleInfoTransform implements TransformAction<Ex
                                          Map<String, List<String>> providers, Set<String> packages, @Nullable ModuleInfo moduleInfo) throws IOException {
         JarEntry jarEntry = inputStream.getNextJarEntry();
         while (jarEntry != null) {
+            byte[] content = inputStream.readAllBytes();
             String entryName = jarEntry.getName();
             boolean isServiceProviderFile = entryName.startsWith(SERVICES_PREFIX) && !entryName.equals(SERVICES_PREFIX);
             if (isServiceProviderFile) {
@@ -240,13 +239,14 @@ public abstract class ExtraJavaModuleInfoTransform implements TransformAction<Ex
                 if (!providers.containsKey(key)) {
                     providers.put(key, new ArrayList<>());
                 }
-                providers.get(key).addAll(extractImplementations(inputStream.readAllBytes()));
+                providers.get(key).addAll(extractImplementations(content));
             }
 
-            if (!JAR_SIGNATURE_PATH.matcher(entryName).matches() && !"META-INF/MANIFEST.MF".equals(jarEntry.getName())) {
+            if (!JAR_SIGNATURE_PATH.matcher(jarEntry.getName()).matches() && !"META-INF/MANIFEST.MF".equals(jarEntry.getName())) {
                 if (!willMergeJars || !isServiceProviderFile) { // service provider files will be merged later
+                    jarEntry.setCompressedSize(-1);
                     try {
-                        manageEntries(inputStream, outputStream, jarEntry, moduleInfo);
+                        manageEntries(content, outputStream, jarEntry, moduleInfo);
                     } catch (ZipException e) {
                         if (!e.getMessage().startsWith("duplicate entry:")) {
                             System.err.println("throw： " + e);
@@ -276,12 +276,12 @@ public abstract class ExtraJavaModuleInfoTransform implements TransformAction<Ex
     }
 
 
-    private void manageEntries(JarInputStream inputStream, JarOutputStream outputStream, JarEntry jarEntry,
+    private void manageEntries(byte[] content, JarOutputStream outputStream, JarEntry jarEntry,
                                @Nullable ModuleInfo moduleInfo) throws IOException {
         outputStream.putNextEntry(jarEntry);
         if (Objects.nonNull(moduleInfo) && jarEntry.getName().equals("module-info.class")) {
             System.err.println("got it !!!");
-            var classReader = new ClassReader(inputStream.readAllBytes());
+            var classReader = new ClassReader(content);
             var classWriter = new ClassWriter(classReader, ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
 
             var cv = new ClassVisitor(Opcodes.ASM9, classWriter) {
@@ -295,7 +295,7 @@ public abstract class ExtraJavaModuleInfoTransform implements TransformAction<Ex
             classReader.accept(cv, 0);
             outputStream.write(classWriter.toByteArray());
         } else
-            outputStream.write(inputStream.readAllBytes());
+            outputStream.write(content);
         outputStream.closeEntry();
     }
 
